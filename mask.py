@@ -1,5 +1,6 @@
 import sys
 import tensorflow as tf
+import math
 
 from PIL import Image, ImageDraw, ImageFont
 from transformers import AutoTokenizer, TFBertForMaskedLM
@@ -45,8 +46,17 @@ def get_mask_token_index(mask_token_id, inputs):
     Return the index of the token with the specified `mask_token_id`, or
     `None` if not present in the `inputs`.
     """
-    # TODO: Implement this function
-    raise NotImplementedError
+
+    # Flatten a inputs from a numpy to a list
+    inputs_list: list = inputs["input_ids"].numpy().flatten()
+
+    # Loop through the indexes of inputs
+    # Return index if the value at that index is equal to mask_token_id
+    for index in range(len(inputs_list)):
+        if mask_token_id == inputs_list[index]:
+            return index
+
+    return None
 
 
 
@@ -55,8 +65,20 @@ def get_color_for_attention_score(attention_score):
     Return a tuple of three integers representing a shade of gray for the
     given `attention_score`. Each value should be in the range [0, 255].
     """
-    # TODO: Implement this function
-    raise NotImplementedError
+
+    # Highest value possible
+    top_value = 255
+
+    if attention_score <= 0:
+        return (0,0,0)
+
+    if attention_score >= 1:
+        return (top_value,top_value,top_value)
+
+    color_value: float = (top_value * attention_score)
+    value_int = math.floor(color_value)
+
+    return (value_int,value_int,value_int)
 
 
 
@@ -71,12 +93,15 @@ def visualize_attentions(tokens, attentions):
     (starting count from 1).
     """
     # TODO: Update this function to produce diagrams for all layers and heads.
-    generate_diagram(
-        1,
-        1,
-        tokens,
-        attentions[0][0][0]
-    )
+    for i in range(len(attentions)):
+        for j in range(len(attentions[i])):
+            for k in range(len(attentions[i][j])):
+                generate_diagram(
+                    i,
+                    k,
+                    tokens,
+                    attentions[i][j][k]
+                )
 
 
 def generate_diagram(layer_number, head_number, tokens, attention_weights):
